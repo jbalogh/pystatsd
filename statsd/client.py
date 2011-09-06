@@ -5,6 +5,12 @@ import threading
 import time
 
 
+class TimerResult(object):
+
+    def __init__(self, ms=None):
+        self.ms = ms
+
+
 class _Timer(object):
     """A contextdecorator for timing."""
     _local = threading.local()
@@ -37,12 +43,14 @@ class _Timer(object):
 
     def __enter__(self):
         self.start = time.time()
+        self.result = TimerResult(self.ms)
 
     def __exit__(self, typ, value, tb):
         dt = time.time() - self.start
         dt = int(round(dt * 1000))  # Convert to ms.
+        self.result.ms = dt
         self.client.timing(self.stat, dt, self.rate)
-        del self.start, self.stat, self.rate  # Clean up.
+        del self.start, self.stat, self.rate, self.result  # Clean up.
         return False
 
 
